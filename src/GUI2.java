@@ -1,9 +1,12 @@
 import javax.swing.*;
+import javax.swing.text.DefaultFormatterFactory;
+import javax.swing.text.NumberFormatter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -17,6 +20,7 @@ public class GUI2 extends JFrame {
     private JButton exportButton;
     private JList<String> typeList;
     private JList<String> yearList;
+    private JFormattedTextField invNumberField;
     private File targetDir;
 
     GUI2() {
@@ -29,6 +33,13 @@ public class GUI2 extends JFrame {
         repaint();
         revalidate();
         pack();
+
+        NumberFormat format = NumberFormat.getInstance();
+        NumberFormatter formatter = new NumberFormatter(format);
+        formatter.setValueClass(Integer.class);
+        formatter.setMaximum(999);
+        formatter.setAllowsInvalid(false);
+        invNumberField.setFormatterFactory(new DefaultFormatterFactory(formatter));
 
         selectTargetButton.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
@@ -55,9 +66,8 @@ public class GUI2 extends JFrame {
         });
 
         exportButton.addActionListener(e -> {
-            System.out.println(typeList.getSelectedValuesList());
-            System.out.println(yearList.getSelectedValuesList());
-            List<File> filteredFiles = GUI.foundedFiles.stream().filter(file -> containsAny(file.getName().split("_F_")[0], typeList.getSelectedValuesList()) && containsAny(file.getName().split("_F_")[1].split("_S")[0], yearList.getSelectedValuesList())).collect(Collectors.toList());
+            System.out.print(invNumberField.getText());
+            List<File> filteredFiles = GUI.foundedFiles.stream().filter(file -> containsAny(file.getName().split("_F_")[0], typeList.getSelectedValuesList()) && containsAny(file.getName().split("_F_")[1].split("_S")[0], yearList.getSelectedValuesList()) && containsAny(file.getName().split("_F_")[0], invNumberField.getText())).collect(Collectors.toList());
             copyFiles(filteredFiles, targetDir.getAbsolutePath());
             JOptionPane.showMessageDialog(null, "Pomyślnie wyeksportowano pliki w liczbie: " + filteredFiles.size(), "Sukces", JOptionPane.INFORMATION_MESSAGE);
         });
@@ -110,5 +120,10 @@ public class GUI2 extends JFrame {
             }
         }
         return false;
+    }
+
+    private boolean containsAny(String inputString, String text) {
+        System.out.print(text);
+        return inputString.contains(text);
     }
 }
