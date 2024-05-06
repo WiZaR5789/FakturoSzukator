@@ -1,12 +1,11 @@
 import javax.swing.*;
-import javax.swing.text.DefaultFormatterFactory;
-import javax.swing.text.NumberFormatter;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -34,12 +33,19 @@ public class GUI2 extends JFrame {
         revalidate();
         pack();
 
-        NumberFormat format = NumberFormat.getInstance();
-        NumberFormatter formatter = new NumberFormatter(format);
-        formatter.setValueClass(Integer.class);
-        formatter.setMaximum(999);
-        formatter.setAllowsInvalid(false);
-        invNumberField.setFormatterFactory(new DefaultFormatterFactory(formatter));
+        invNumberField.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
+                    getToolkit().beep();
+                    e.consume();
+                }
+                if (invNumberField.getText().length() > 2) {
+                    getToolkit().beep();
+                    e.consume();
+                }
+            }
+        });
 
         selectTargetButton.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
@@ -66,7 +72,6 @@ public class GUI2 extends JFrame {
         });
 
         exportButton.addActionListener(e -> {
-            System.out.print(invNumberField.getText());
             List<File> filteredFiles = GUI.foundedFiles.stream().filter(file -> containsAny(file.getName().split("_F_")[0], typeList.getSelectedValuesList()) && containsAny(file.getName().split("_F_")[1].split("_S")[0], yearList.getSelectedValuesList()) && containsAny(file.getName().split("_F_")[0], invNumberField.getText())).collect(Collectors.toList());
             copyFiles(filteredFiles, targetDir.getAbsolutePath());
             JOptionPane.showMessageDialog(null, "Pomyślnie wyeksportowano pliki w liczbie: " + filteredFiles.size(), "Sukces", JOptionPane.INFORMATION_MESSAGE);
@@ -91,7 +96,7 @@ public class GUI2 extends JFrame {
         Vector<String> result = new Vector<>();
         files.forEach(file -> {
             String[] tmp = file.getName().split("_S")[0].split("_");
-            String name = tmp[tmp.length-1];
+            String name = tmp[tmp.length - 1];
             if (!result.contains(name)) {
                 result.add(name);
             }
